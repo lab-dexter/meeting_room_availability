@@ -1,24 +1,25 @@
 import RPi.GPIO as GPIO
 import time
 import requests
+from variables import *
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 
 #define sound sensor PIN connection and mode
-SOUND_PIN = 17
+SOUND_PIN = sound_pin_number
 GPIO.setup(SOUND_PIN, GPIO.IN)
 
 #define PIR sensor PIN connection and mode
-PIR_PIN = 4
+PIR_PIN = pir_pin_number
 GPIO.setup(PIR_PIN, GPIO.IN)
 
 #defined LED PIN connection and mode
-LED_PIN = 18
+LED_PIN = led_pin_number
 GPIO.setup(LED_PIN,GPIO.OUT,initial=GPIO.LOW)
 
 #define NodeMCU IP address variable
-MCU_IP = '192.168.8.113'
+MCU_IP = nodemcu_IP_address
 
 #LED turn on function
 def LED_ON():
@@ -32,7 +33,11 @@ def LED_ON():
 
 #function to send request to NodeMcu esp8266 and change LCD screen text
 def QUERY_NodeMCU(text):
-        r = requests.get('http://'+MCU_IP+'/'+text)
+        try:
+                r = requests.get('http://'+MCU_IP+'/'+text)
+        except Exception as err:
+                print "Something went wrong with connecting to NodeMcu webserver.\nError code: "
+                print err
 
 
 #Sound sensor event detect callback function. It will call LED_ON function
