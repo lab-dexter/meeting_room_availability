@@ -142,7 +142,7 @@ void handleRootPath(){
 
 void room_free(){
   server.send(200, "text/plain", "Room marked as free");
-  POSTrequest(sensor, mac, distance, date);
+  //POSTrequest(sensor, mac, distance, date);
 }
 
 void room_in_use(){
