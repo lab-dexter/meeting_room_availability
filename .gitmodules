@@ -1,0 +1,3 @@
+[submodule "MeetingRoomStatusDisplay/testingPOST"]
+	path = MeetingRoomStatusDisplay/testingPOST
+	url = https://github.com/lab-dexter/srb-esp8266.git

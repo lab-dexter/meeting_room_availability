@@ -30,10 +30,13 @@
 #include <epdpaint.h>
 #include "ESP8266WiFi.h"
 #include "ESP8266WebServer.h"
+#include "testingPOST.h"
 
 // WiFi parameters
-const char* ssid = "<SSID NAME>";
-const char* password = "<PASSWORD>";
+const char* ssid = "BarclaysWiFi";
+
+String mac = getMacAddress();
+String date = getTime();
 
 // The port to listen for incoming TCP connections 
 #define LISTEN_PORT           80
@@ -46,7 +49,7 @@ ESP8266WebServer server(LISTEN_PORT);
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(9600);
+  Serial.begin(115200);
 
   serverSetup();
   
@@ -113,14 +116,30 @@ void serverSetup() {
   Serial.begin(115200);
   
   // Connect to WiFi
-  WiFi.begin(ssid, password);
+  WiFi.begin(ssid);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
   Serial.println("");
   Serial.println("WiFi connected");
- 
+
+  if(WiFi.status() == WL_CONNECTED){   //Check WiFi connection status
+        
+    //String mac = "aa:aa:aa:aa:aa:aa";
+    Serial.print("MAC: "); Serial.println(mac);
+  
+    //String date = "1994-03-09 00:00:00";
+    Serial.print("TIME: "); Serial.println(date);
+    
+    Serial.println("");
+    Serial.println("");
+  }
+  else 
+  {
+    Serial.println("Error in WiFi connection");   
+  }
+  
   // Print the IP address
   Serial.println(WiFi.localIP());
 
@@ -142,10 +161,11 @@ void handleRootPath(){
 
 void room_free(){
   server.send(200, "text/plain", "Room marked as free");
-  //POSTrequest(sensor, mac, distance, date);
+  POSTrequest(0, mac, date);
 }
 
 void room_in_use(){
   server.send(200, "text/plain", "Room marked as in use");
+  POSTrequest(1, mac, date);
 }
 
