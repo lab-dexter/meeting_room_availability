@@ -28,13 +28,28 @@
 #include <epd2in7b.h>
 #include "imagedata.h"
 #include <epdpaint.h>
+#include "ESP8266WiFi.h"
+#include "ESP8266WebServer.h"
+
+// WiFi parameters
+const char* ssid = "<SSID NAME>";
+const char* password = "<PASSWORD>";
+
+// The port to listen for incoming TCP connections 
+#define LISTEN_PORT           80
 
 #define COLORED     1
 #define UNCOLORED   0
 
+// Create an instance of the server
+ESP8266WebServer server(LISTEN_PORT);
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
+
+  serverSetup();
+  
   Epd epd;
 
   if (epd.Init() != 0) {
@@ -93,8 +108,44 @@ void setup() {
   epd.Sleep();
 }
 
+void serverSetup() {
+  // Start Serial
+  Serial.begin(115200);
+  
+  // Connect to WiFi
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("");
+  Serial.println("WiFi connected");
+ 
+  // Print the IP address
+  Serial.println(WiFi.localIP());
+
+  server.on("/", handleRootPath);
+  server.on("/free", room_free);
+  server.on("/in_use", room_in_use);
+  server.begin();
+  Serial.println("Server Listening");
+}
+
 void loop() {
   // put your main code here, to run repeatedly:
+  server.handleClient();
+}
 
+void handleRootPath(){
+  server.send(200, "text/plain", "Hi");
+}
+
+void room_free(){
+  server.send(200, "text/plain", "Room marked as free");
+  POSTrequest(sensor, mac, distance, date);
+}
+
+void room_in_use(){
+  server.send(200, "text/plain", "Room marked as in use");
 }
 
