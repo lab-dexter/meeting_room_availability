@@ -35,9 +35,19 @@
 // WiFi parameters
 const char* ssid = "BarclaysWiFi";
 
-String mac = getMacAddress();
-String date = getTime();
+String mac;
+String date;
+Epd epd;
 
+  /**
+    * Due to RAM not enough in Arduino UNO, a frame buffer is not allowed.
+    * In this case, a smaller image buffer is allocated and you have to 
+    * update a partial display several times.
+    * 1 byte = 8 pixels, therefore you have to set 8*N pixels at a time.
+    */
+  unsigned char image[1024];
+  Paint paint(image, 176, 24);    //width should be the multiple of 8 
+  
 // The port to listen for incoming TCP connections 
 #define LISTEN_PORT           80
 
@@ -53,7 +63,7 @@ void setup() {
 
   serverSetup();
   
-  Epd epd;
+
 
   if (epd.Init() != 0) {
     Serial.print("e-Paper init failed");
@@ -63,57 +73,34 @@ void setup() {
   /* This clears the SRAM of the e-paper display */
   epd.ClearFrame();
 
-  /**
-    * Due to RAM not enough in Arduino UNO, a frame buffer is not allowed.
-    * In this case, a smaller image buffer is allocated and you have to 
-    * update a partial display several times.
-    * 1 byte = 8 pixels, therefore you have to set 8*N pixels at a time.
-    */
-  unsigned char image[1024];
-  Paint paint(image, 176, 24);    //width should be the multiple of 8 
 
-  paint.Clear(UNCOLORED);
+
+  /* paint.Clear(UNCOLORED);
   paint.DrawStringAt(0, 0, "e-Paper Demo", &Font16, COLORED);
-  epd.TransmitPartialBlack(paint.GetImage(), 16, 32, paint.GetWidth(), paint.GetHeight());
+  epd.TransmitPartialBlack(paint.GetImage(), 16, 32, paint.GetWidth(), paint.GetHeight()); */
 
   paint.Clear(COLORED);
-  paint.DrawStringAt(2, 2, "Hello world!", &Font20, UNCOLORED);
+  paint.DrawStringAt(2, 2, "Vika privet!", &Font20, UNCOLORED);
   epd.TransmitPartialRed(paint.GetImage(), 0, 64, paint.GetWidth(), paint.GetHeight());
   
   paint.SetWidth(64);
   paint.SetHeight(64);
 
-  paint.Clear(UNCOLORED);
-  paint.DrawRectangle(0, 0, 40, 50, COLORED);
-  paint.DrawLine(0, 0, 40, 50, COLORED);
-  paint.DrawLine(40, 0, 0, 50, COLORED);
-  epd.TransmitPartialBlack(paint.GetImage(), 10, 130, paint.GetWidth(), paint.GetHeight());
-  
-  paint.Clear(UNCOLORED);
+  /*paint.Clear(UNCOLORED);
   paint.DrawCircle(32, 32, 30, COLORED);
-  epd.TransmitPartialBlack(paint.GetImage(), 90, 120, paint.GetWidth(), paint.GetHeight());
-
-  paint.Clear(UNCOLORED);
-  paint.DrawFilledRectangle(0, 0, 40, 50, COLORED);
-  epd.TransmitPartialRed(paint.GetImage(), 10, 200, paint.GetWidth(), paint.GetHeight());
-
-  paint.Clear(UNCOLORED);
-  paint.DrawFilledCircle(32, 32, 30, COLORED);
-  epd.TransmitPartialRed(paint.GetImage(), 90, 190, paint.GetWidth(), paint.GetHeight());
+  epd.TransmitPartialBlack(paint.GetImage(), 90, 120, paint.GetWidth(), paint.GetHeight()); */
 
   /* This displays the data from the SRAM in e-Paper module */
   epd.DisplayFrame();
 
   /* This displays an image */
-  epd.DisplayFrame(IMAGE_BLACK, IMAGE_RED);
+  //epd.DisplayFrame(IMAGE_BLACK, IMAGE_RED);
 
   /* Deep sleep */
   epd.Sleep();
 }
 
 void serverSetup() {
-  // Start Serial
-  Serial.begin(115200);
   
   // Connect to WiFi
   WiFi.begin(ssid);
@@ -127,9 +114,11 @@ void serverSetup() {
   if(WiFi.status() == WL_CONNECTED){   //Check WiFi connection status
         
     //String mac = "aa:aa:aa:aa:aa:aa";
+    mac = getMacAddress();
     Serial.print("MAC: "); Serial.println(mac);
   
     //String date = "1994-03-09 00:00:00";
+    date = getTime();
     Serial.print("TIME: "); Serial.println(date);
     
     Serial.println("");
@@ -161,11 +150,25 @@ void handleRootPath(){
 
 void room_free(){
   server.send(200, "text/plain", "Room marked as free");
+  paint.Clear(UNCOLORED);
+  paint.DrawRectangle(0, 0, 40, 50, COLORED);
+  paint.DrawLine(0, 0, 40, 50, COLORED);
+  paint.DrawLine(40, 0, 0, 50, COLORED);
+  epd.TransmitPartialBlack(paint.GetImage(), 10, 130, paint.GetWidth(), paint.GetHeight());
   POSTrequest(0, mac, date);
 }
 
 void room_in_use(){
+  Serial.print("Got the request to mark the room as in use");
   server.send(200, "text/plain", "Room marked as in use");
+  paint.Clear(UNCOLORED);
+  paint.DrawFilledRectangle(0, 0, 40, 50, COLORED);
+  epd.TransmitPartialRed(paint.GetImage(), 10, 200, paint.GetWidth(), paint.GetHeight());
+
+  paint.Clear(UNCOLORED);
+  paint.DrawFilledCircle(32, 32, 30, COLORED);
+  epd.TransmitPartialRed(paint.GetImage(), 90, 190, paint.GetWidth(), paint.GetHeight());
   POSTrequest(1, mac, date);
+  epd.DisplayFrame();
 }
 

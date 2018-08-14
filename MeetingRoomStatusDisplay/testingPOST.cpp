@@ -1,7 +1,7 @@
 #include <ESP8266HTTPClient.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266httpUpdate.h>
-#include "NTPtimeESP.h"
+#include <NTPtimeESP.h>
 
 NTPtime NTPch("lt.pool.ntp.org"); 
 strDateTime dateTime;
