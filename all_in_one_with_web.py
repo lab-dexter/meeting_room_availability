@@ -20,17 +20,20 @@ GPIO.setup(LED_PIN,GPIO.OUT,initial=GPIO.LOW)
 
 #define NodeMCU IP address variable
 MCU_IP = nodemcu_IP_address
+turnedoff = True
+start = time.time()
 
 #LED turn on function
 def LED_ON():
-        print "LED on"
-        GPIO.output(LED_PIN,GPIO.HIGH)
-        QUERY_NodeMCU('in_use')
-        time.sleep(5)
-        print "LED off\n"
-        GPIO.output(LED_PIN,GPIO.LOW)
-        QUERY_NodeMCU('free')
-
+        global start
+        global turnedoff
+        start = time.time()
+        if turnedoff:
+                print "Turned LED on: ", time.strftime("%H:%M"), "\n"
+                GPIO.output(LED_PIN,GPIO.HIGH)
+                QUERY_NodeMCU('in_use')
+                turnedoff = False
+        
 #function to send request to NodeMcu esp8266 and change LCD screen text
 def QUERY_NodeMCU(text):
         try:
@@ -42,25 +45,34 @@ def QUERY_NodeMCU(text):
 
 #Sound sensor event detect callback function. It will call LED_ON function
 def SOUND(SOUND_PIN): 
-	print "Sound Detected!\n------------------"
-	LED_ON()
+        print "Sound Detected!\n"
+        LED_ON()
 
 #PIR sensor event detect callback function. It will call LED_ON function
 def MOTION(PIR_PIN): 
-	print "Motion Detected!\n------------------"
-	LED_ON()
+        print "Motion Detected!\n"
+        LED_ON()
 
 #-------MAIN PROGRAM STARTS HERE---------
-print "Meeting Room Availability Detection System Starting(CTRL+C to exit)"
+print "Meeting Room Availability Detection System Starting (CTRL+C to exit)"
 time.sleep(5)
 print "Ready. Monitoring..."
 
 try:
-	GPIO.add_event_detect(SOUND_PIN, GPIO.FALLING, callback=SOUND)
-	GPIO.add_event_detect(PIR_PIN, GPIO.RISING, callback=MOTION)
-	while 1:
-		time.sleep(100)        
-		
+        GPIO.add_event_detect(SOUND_PIN, GPIO.FALLING, callback=SOUND)
+        GPIO.add_event_detect(PIR_PIN, GPIO.RISING, callback=MOTION)
+        
+        GPIO.output(LED_PIN,GPIO.LOW)
+        while 1:
+                time.sleep(60)
+                if time.time() - start > 360 and not turnedoff:
+                        print "Turned LED off\n"
+                        GPIO.output(LED_PIN,GPIO.LOW)
+                        QUERY_NodeMCU('free')
+                        turnedoff = True
+                else:
+                        GPIO.output(LED_PIN,GPIO.HIGH)
+
 except KeyboardInterrupt:
-	print "Quit"
-	GPIO.cleanup()
+        print "Quit"
+        GPIO.cleanup()
