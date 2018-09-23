@@ -70,25 +70,6 @@ void setup() {
 
   /* This clears the SRAM of the e-paper display */
   epd.ClearFrame();
-  
-  /* 
-  paint.Clear(UNCOLORED);
-  paint.DrawStringAt(0, 0, "e-Paper Demo", &Font16, COLORED);
-  epd.TransmitPartialBlack(paint.GetImage(), 16, 32, paint.GetWidth(), paint.GetHeight()); 
-
-  paint.Clear(UNCOLORED);
-  paint.DrawCircle(32, 32, 30, COLORED);
-  epd.TransmitPartialBlack(paint.GetImage(), 90, 120, paint.GetWidth(), paint.GetHeight()); 
-
-  // This displays the data from the SRAM in e-Paper module
-  epd.DisplayFrame();
-  
-  // This displays an image
-  epd.DisplayFrame(IMAGE_BLACK, IMAGE_RED);
-  
-  // Deep sleep
-  epd.Sleep();
-  */
 }
 
 void serverSetup() {
@@ -140,47 +121,47 @@ void handleRootPath(){
 }
 
 void room_free(){
-  Serial.println("Got the request to mark the room as free");
+  Serial.println("Room is free");
 
   epd.ClearFrame();
-  
-  paint.DrawStringAt(0, 0, "Room is free", &Font20, COLORED);
-  epd.TransmitPartialRed(paint.GetImage(), 20, 64, paint.GetWidth(), paint.GetHeight());
-  server.send(200, "text/plain", "Room marked as free");
-  
-  //paint.DrawRectangle(0, 0, 40, 50, UNCOLORED);
-  //paint.DrawLine(0, 0, 40, 50, COLORED);
-  //paint.DrawLine(40, 0, 0, 50, COLORED);
-  
-  //epd.TransmitPartialBlack(paint.GetImage(), 10, 130, paint.GetWidth(), paint.GetHeight());
-  POSTrequest(0, mac, date);
-  epd.DisplayFrame();
-  //epd.Sleep();
-}
 
-void room_in_use(){
-  Serial.println("Got the request to mark the room as in use");
-
-  epd.ClearFrame();
   paint.Clear(UNCOLORED);
-  
-  paint.DrawStringAt(0, 0, "Room not free", &Font16, COLORED);
-  epd.TransmitPartialBlack(paint.GetImage(), 10, 200, paint.GetWidth(), paint.GetHeight());
-
-  server.send(200, "text/plain", "Room marked as in use");
-  /*
-  paint.Clear(UNCOLORED);
-  paint.DrawFilledRectangle(0, 0, 40, 50, COLORED);
-  epd.TransmitPartialRed(paint.GetImage(), 10, 200, paint.GetWidth(), paint.GetHeight());
-  */
+  paint.DrawStringAt(0, 0, "Room is free", &Font16, COLORED);
+  epd.TransmitPartialBlack(paint.GetImage(), 30, 60, paint.GetWidth(), paint.GetHeight());
 
   paint.SetWidth(64);
   paint.SetHeight(64);
-  paint.Clear(COLORED);
-  paint.DrawFilledCircle(32, 32, 30, COLORED);
-  epd.TransmitPartialRed(paint.GetImage(), 20, 30, paint.GetWidth(), paint.GetHeight());
-  POSTrequest(1, mac, date);
+  
+  paint.Clear(UNCOLORED);
+  paint.DrawFilledRectangle(0, 0, 40, 50, COLORED);
+  epd.TransmitPartialBlack(paint.GetImage(), 50, 120, paint.GetWidth(), paint.GetHeight());
+  
+  server.send(200, "text/plain", "Room marked as free");
+  
+  POSTrequest(0, mac, date);
   epd.DisplayFrame();
-  //epd.Sleep();
+  epd.Sleep();
+}
+
+void room_in_use(){
+  Serial.println("Room in use");
+
+  server.send(200, "text/plain", "Room marked as in use");
+  epd.ClearFrame();
+  
+  paint.Clear(UNCOLORED);
+  paint.DrawStringAt(0, 0, "Room in use", &Font16, COLORED);
+  epd.TransmitPartialRed(paint.GetImage(), 30, 60, paint.GetWidth(), paint.GetHeight());
+
+  paint.SetWidth(64);
+  paint.SetHeight(64);
+  
+  paint.Clear(UNCOLORED);
+  paint.DrawFilledCircle(32, 32, 30, COLORED);
+  epd.TransmitPartialRed(paint.GetImage(), 50, 120, paint.GetWidth(), paint.GetHeight());
+  POSTrequest(1, mac, date);
+  
+  epd.DisplayFrame();
+  epd.Sleep();
 }
 
