@@ -45,12 +45,12 @@ def QUERY_NodeMCU(text):
 
 #Sound sensor event detect callback function. It will call LED_ON function
 def SOUND(SOUND_PIN): 
-        print "Sound Detected!\n"
+        print "Sound Detected: ", time.strftime("%H:%M"), "\n"
         LED_ON()
 
 #PIR sensor event detect callback function. It will call LED_ON function
 def MOTION(PIR_PIN): 
-        print "Motion Detected!\n"
+        print "Motion Detected: ", time.strftime("%H:%M"), "\n"
         LED_ON()
 
 #-------MAIN PROGRAM STARTS HERE---------
@@ -65,8 +65,8 @@ try:
         GPIO.output(LED_PIN,GPIO.LOW)
         while 1:
                 time.sleep(60)
-                if time.time() - start > 360 and not turnedoff:
-                        print "Turned LED off\n"
+                if time.time() - start > 90 and not turnedoff:
+                        print "Turned LED off: ", time.strftime("%H:%M"), "\n"
                         GPIO.output(LED_PIN,GPIO.LOW)
                         QUERY_NodeMCU('free')
                         turnedoff = True
