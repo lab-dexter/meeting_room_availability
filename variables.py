@@ -5,4 +5,4 @@ pir_pin_number = 4
 #PIN number where + output for LED is connectd
 led_pin_number = 18
 #IP address of NodeMCU webserver
-nodemcu_IP_address = '192.168.8.113'
+nodemcu_IP_address = '97.9.77.166'
