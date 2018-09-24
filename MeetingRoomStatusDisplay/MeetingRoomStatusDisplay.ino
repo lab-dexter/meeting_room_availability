@@ -133,14 +133,15 @@ void room_free(){
   paint.SetHeight(64);
   
   paint.Clear(UNCOLORED);
-  paint.DrawFilledRectangle(0, 0, 40, 50, COLORED);
-  epd.TransmitPartialBlack(paint.GetImage(), 50, 120, paint.GetWidth(), paint.GetHeight());
+  paint.DrawFilledRectangle(0, 0, 50, 50, COLORED);
+  epd.TransmitPartialBlack(paint.GetImage(), 60, 120, paint.GetWidth(), paint.GetHeight());
   
   server.send(200, "text/plain", "Room marked as free");
   
   POSTrequest(0, mac, date);
   epd.DisplayFrame();
-  epd.Sleep();
+  
+  paint.SetWidth (160);
 }
 
 void room_in_use(){
@@ -158,10 +159,10 @@ void room_in_use(){
   
   paint.Clear(UNCOLORED);
   paint.DrawFilledCircle(32, 32, 30, COLORED);
-  epd.TransmitPartialRed(paint.GetImage(), 50, 120, paint.GetWidth(), paint.GetHeight());
+  epd.TransmitPartialRed(paint.GetImage(), 60, 120, paint.GetWidth(), paint.GetHeight());
   POSTrequest(1, mac, date);
   
   epd.DisplayFrame();
-  epd.Sleep();
+  paint.SetWidth (160);
 }
 
