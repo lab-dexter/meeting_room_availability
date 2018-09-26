@@ -24,7 +24,7 @@ MCU_IP = nodemcu_IP_address
 #function to send request to NodeMcu esp8266 and change LCD screen text
 def QUERY_NodeMCU(text):
         try:
-                r = requests.get('http://'+MCU_IP+'/'+text, timeout=(0.5, 1))
+                r = requests.get('http://'+MCU_IP+'/'+text, timeout=(5, 10))
         except Exception as err:
                 print "Something went wrong with connecting to NodeMcu webserver.\nError code: "
                 print err
@@ -33,19 +33,19 @@ def QUERY_NodeMCU(text):
 #Sound sensor event detect callback function. It will call LED_ON function
 def SOUND(SOUND_PIN): 
         print "Sound Detected"
-        global detected
-        detected = True;
+        global inuse
+        inuse = True
 
 #PIR sensor event detect callback function. It will call LED_ON function
 def MOTION(PIR_PIN): 
         print "Motion Detected"
-        global detected
-        detected = True;
+        global inuse
+        inuse = True
 
 #-------MAIN PROGRAM STARTS HERE---------
 print "Meeting Room Availability Detection System Starting (CTRL+C to exit)"
 time.sleep(5)
-print "Ready. Monitoring..."
+print "Ready. Monitoring: ", time.strftime("%H:%M"), "\n"
 
 try:
         GPIO.add_event_detect(SOUND_PIN, GPIO.FALLING, callback=SOUND)
@@ -53,35 +53,38 @@ try:
         
         GPIO.output(LED_PIN,GPIO.LOW)
 
-        turnedoff = True
-        detected = False;
+        start = time.time();
+        inuse  = False
+        wasinuse = False;
         
         while 1:
-                if turnedoff:
-                        if detected:
-                                turnedoff = False
-                                detected = False
-                                QUERY_NodeMCU('in_use')
-                                GPIO.output(LED_PIN,GPIO.HIGH)
-                                print "Turned LED on: ", time.strftime("%H:%M"), "\n"
-
-                        time.sleep(180)
+                
+                if inuse:
+                        GPIO.output(LED_PIN,GPIO.HIGH)
                 else:
-                        if not detected:
-                                turnedoff = True
+                        GPIO.output(LED_PIN,GPIO.LOW)              
+                
+                #Send status change every 2 minutes, not often. Or if it was free, but... busy now!
+                if time.time() - start > 120 or (inuse and not wasinuse):
+                        print time.strftime("%H:%M"), ": wasinuse -", wasinuse, "| inuse -", inuse
+
+                        #Send the request only when status changes
+                        if inuse:
+                                if not wasinuse:
+                                        QUERY_NodeMCU('in_use')
+                                        wasinuse = True
+                                        print "Request sent: ",time.strftime("%H:%M"),". Room is in use\n"
+                                        
+                                inuse = False
+                        elif wasinuse:
                                 QUERY_NodeMCU('free')
-                                GPIO.output(LED_PIN,GPIO.LOW)
-                                print "Turned LED off: ", time.strftime("%H:%M"), "\n"
-                        else:
-                                detected = False
+                                wasinuse = False
+                                print "Request sent: ",time.strftime("%H:%M"),". Room is free\n"
+                                        
+                        start = time.time()
 
-                        time.sleep(60)
-
-                if turnedoff:
-                        print "LED off: ", time.strftime("%H:%M"), "\n"
-                else:
-                        print "LED on: ", time.strftime("%H:%M"), "\n"
-
+                time.sleep(0.1)
+                                
 except KeyboardInterrupt:
         print "Quit"
         GPIO.cleanup()
