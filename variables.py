@@ -6,3 +6,5 @@ pir_pin_number = 4
 led_pin_number = 18
 #IP address of NodeMCU webserver
 nodemcu_IP_address = '97.9.77.166'
+#host server
+host_url = 'http://srb-middleware-dexter-lab.e4ff.pro-eu-west-1.openshiftapps.com/v1/ra_data'
