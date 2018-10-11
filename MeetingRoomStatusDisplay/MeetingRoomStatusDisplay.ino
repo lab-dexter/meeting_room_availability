@@ -122,9 +122,11 @@ void handleRootPath(){
 
 void room_free(){
   Serial.println("Room is free");
-
+  server.send(200, "text/plain", "Room marked as free");
+  
   epd.ClearFrame();
 
+  paint.SetWidth (160);
   paint.Clear(UNCOLORED);
   paint.DrawStringAt(0, 0, "Room is free", &Font16, COLORED);
   epd.TransmitPartialBlack(paint.GetImage(), 30, 60, paint.GetWidth(), paint.GetHeight());
@@ -136,20 +138,18 @@ void room_free(){
   paint.DrawFilledRectangle(0, 0, 50, 50, COLORED);
   epd.TransmitPartialBlack(paint.GetImage(), 60, 120, paint.GetWidth(), paint.GetHeight());
   
-  server.send(200, "text/plain", "Room marked as free");
   
   POSTrequest(0, mac, date);
   epd.DisplayFrame();
-  
-  paint.SetWidth (160);
 }
 
 void room_in_use(){
   Serial.println("Room in use");
-
   server.send(200, "text/plain", "Room marked as in use");
-  epd.ClearFrame();
   
+  epd.ClearFrame();
+
+  paint.SetWidth (160);
   paint.Clear(UNCOLORED);
   paint.DrawStringAt(0, 0, "Room in use", &Font16, COLORED);
   epd.TransmitPartialRed(paint.GetImage(), 30, 60, paint.GetWidth(), paint.GetHeight());
@@ -163,6 +163,5 @@ void room_in_use(){
   POSTrequest(1, mac, date);
   
   epd.DisplayFrame();
-  paint.SetWidth (160);
 }
 
