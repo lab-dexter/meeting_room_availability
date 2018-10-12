@@ -34,7 +34,6 @@
 
 // WiFi parameters
 const char* ssid = "BarclaysWiFi";
-
 String mac;
 String date;
 Epd epd;
@@ -50,7 +49,6 @@ Paint paint(image, 176, 24);    //width should be the multiple of 8
   
 // The port to listen for incoming TCP connections 
 #define LISTEN_PORT           80
-
 #define COLORED     1
 #define UNCOLORED   0
 
@@ -73,7 +71,6 @@ void setup() {
 }
 
 void serverSetup() {
-  
   // Connect to WiFi
   WiFi.begin(ssid);
   while (WiFi.status() != WL_CONNECTED) {
@@ -83,18 +80,17 @@ void serverSetup() {
   Serial.println("");
   Serial.println("WiFi connected");
 
-  if(WiFi.status() == WL_CONNECTED){   //Check WiFi connection status
-        
-    //String mac = "aa:aa:aa:aa:aa:aa";
+  //Check WiFi connection status
+  if(WiFi.status() == WL_CONNECTED) {         
+    //mac = "aa:aa:aa:aa:aa:aa";
     mac = getMacAddress();
     Serial.print("MAC: "); Serial.println(mac);
   
-    //String date = "1994-03-09 00:00:00";
+    //date = "1994-03-09 00:00:00";
     date = getTime();
     Serial.print("TIME: "); Serial.println(date);
     
-    Serial.println("");
-    Serial.println("");
+    Serial.println(""); Serial.println("");
   }
   else 
   {
@@ -125,7 +121,6 @@ void room_free(){
   server.send(200, "text/plain", "Room marked as free");
   
   epd.ClearFrame();
-
   paint.SetWidth (160);
   paint.Clear(UNCOLORED);
   paint.DrawStringAt(0, 0, "Room is free", &Font16, COLORED);
@@ -133,13 +128,12 @@ void room_free(){
 
   paint.SetWidth(64);
   paint.SetHeight(64);
-  
   paint.Clear(UNCOLORED);
+
   paint.DrawFilledRectangle(0, 0, 50, 50, COLORED);
   epd.TransmitPartialBlack(paint.GetImage(), 60, 120, paint.GetWidth(), paint.GetHeight());
-  
-  
   POSTrequest(0, mac, date);
+  
   epd.DisplayFrame();
 }
 
@@ -148,7 +142,6 @@ void room_in_use(){
   server.send(200, "text/plain", "Room marked as in use");
   
   epd.ClearFrame();
-
   paint.SetWidth (160);
   paint.Clear(UNCOLORED);
   paint.DrawStringAt(0, 0, "Room in use", &Font16, COLORED);
@@ -156,8 +149,8 @@ void room_in_use(){
 
   paint.SetWidth(64);
   paint.SetHeight(64);
-  
   paint.Clear(UNCOLORED);
+  
   paint.DrawFilledCircle(32, 32, 30, COLORED);
   epd.TransmitPartialRed(paint.GetImage(), 60, 120, paint.GetWidth(), paint.GetHeight());
   POSTrequest(1, mac, date);
