@@ -1,6 +1,8 @@
 import RPi.GPIO as GPIO
 import time
 import requests
+import json
+import netifaces
 from variables import *
 
 GPIO.setmode(GPIO.BCM)
@@ -20,11 +22,17 @@ GPIO.setup(LED_PIN,GPIO.OUT,initial=GPIO.LOW)
 
 #define NodeMCU IP address variable
 MCU_IP = nodemcu_IP_address
-        
+
+#define host url
+URL = host_url
+     
 #function to send request to NodeMcu esp8266 and change LCD screen text
-def QUERY_NodeMCU(text):
+def QUERY_NodeMCU(status):
         try:
-                r = requests.get('http://'+MCU_IP+'/'+text, timeout=(5, 10))
+                device_tuple = {'data': status, 'mac': mac, 'time': get_time()}
+                r = requests.post(URL, json=device_tuple)
+                print "Request: ", r.text, "status: ", r.status_code
+                #r = requests.get('http://'+MCU_IP+'/'+text, timeout=5)
         except Exception as err:
                 print "Something went wrong with connecting to NodeMcu webserver.\nError code: "
                 print err
@@ -42,10 +50,20 @@ def MOTION(PIR_PIN):
         global inuse
         inuse = True
 
+def get_mac():
+        wlan_data = netifaces.ifaddresses('wlan0')[netifaces.AF_LINK]
+        return wlan_data[0]['addr']
+
+def get_time():
+        return time.strftime("%Y-%m-%d %H:%M:%S")
+        
+
 #-------MAIN PROGRAM STARTS HERE---------
 print "Meeting Room Availability Detection System Starting (CTRL+C to exit)"
 time.sleep(5)
 print "Ready. Monitoring: ", time.strftime("%H:%M"), "\n"
+
+mac = get_mac()
 
 try:
         GPIO.add_event_detect(SOUND_PIN, GPIO.FALLING, callback=SOUND)
@@ -66,18 +84,18 @@ try:
                 
                 #Send status change every 2 minutes, not often. Or if it was free, but... busy now!
                 if time.time() - start > 120 or (inuse and not wasinuse):
-                        print time.strftime("%H:%M"), ": wasinuse -", wasinuse, "| inuse -", inuse
+                        print time.strftime("%H:%M"),": wasinuse-",wasinuse,"inuse-",inuse
 
                         #Send the request only when status changes
                         if inuse:
                                 if not wasinuse:
-                                        QUERY_NodeMCU('in_use')
+                                        QUERY_NodeMCU('1')
                                         wasinuse = True
                                         print "Request sent: ",time.strftime("%H:%M"),". Room is in use\n"
                                         
                                 inuse = False
                         elif wasinuse:
-                                QUERY_NodeMCU('free')
+                                QUERY_NodeMCU('0')
                                 wasinuse = False
                                 print "Request sent: ",time.strftime("%H:%M"),". Room is free\n"
                                         
