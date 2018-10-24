@@ -34,10 +34,11 @@
 // WiFi parameters
 const char* ssid = "BarclaysWiFi";
 
-const String host = "http://flask-app-dexter-lab.e4ff.pro-eu-west-1.openshiftapps.com/ra";
+const String host = "http://flask-app-dexter-lab.e4ff.pro-eu-west-1.openshiftapps.com/rs";
 String payload;
 int httpCode;
 int found;
+bool previousState;
 HTTPClient http;
 Epd epd;
 
@@ -59,6 +60,8 @@ void setup() {
   Serial.begin(115200);
   
   connectToWiFi();
+  
+  previousState = true;
   
   if (epd.Init() != 0) {
     Serial.print("e-Paper init failed");
@@ -95,10 +98,16 @@ void loop() {
       
       if (found == -1)
       {
+        if (!previousState) {
           room_free();
+        }
+        previousState = true;
       }
       else { 
+        if (previousState){
           room_in_use();
+        }
+        previousState = false;
       }
     }
     else {
@@ -108,7 +117,7 @@ void loop() {
     http.end();
   }
 
-  delay(3000);
+  delay(30000);
 }
 
 void room_free(){
