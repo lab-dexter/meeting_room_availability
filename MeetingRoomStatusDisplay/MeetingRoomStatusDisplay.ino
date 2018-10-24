@@ -28,14 +28,17 @@
 #include <epd2in7b.h>
 #include "imagedata.h"
 #include <epdpaint.h>
+#include <ESP8266HTTPClient.h>
 #include "ESP8266WiFi.h"
-#include "ESP8266WebServer.h"
-#include "testingPOST.h"
 
 // WiFi parameters
 const char* ssid = "BarclaysWiFi";
-String mac;
-String date;
+
+const String host = "http://flask-app-dexter-lab.e4ff.pro-eu-west-1.openshiftapps.com/ra";
+String payload;
+int httpCode;
+int found;
+HTTPClient http;
 Epd epd;
 
   /**
@@ -48,19 +51,15 @@ unsigned char image[1024];
 Paint paint(image, 176, 24);    //width should be the multiple of 8 
   
 // The port to listen for incoming TCP connections 
-#define LISTEN_PORT           80
 #define COLORED     1
 #define UNCOLORED   0
-
-// Create an instance of the server
-ESP8266WebServer server(LISTEN_PORT);
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
-
-  serverSetup();
- 
+  
+  connectToWiFi();
+  
   if (epd.Init() != 0) {
     Serial.print("e-Paper init failed");
     return;
@@ -70,7 +69,7 @@ void setup() {
   epd.ClearFrame();
 }
 
-void serverSetup() {
+void connectToWiFi() {
   // Connect to WiFi
   WiFi.begin(ssid);
   while (WiFi.status() != WL_CONNECTED) {
@@ -79,47 +78,42 @@ void serverSetup() {
   }
   Serial.println("");
   Serial.println("WiFi connected");
-
-  //Check WiFi connection status
-  if(WiFi.status() == WL_CONNECTED) {         
-    //mac = "aa:aa:aa:aa:aa:aa";
-    mac = getMacAddress();
-    Serial.print("MAC: "); Serial.println(mac);
-  
-    //date = "1994-03-09 00:00:00";
-    date = getTime();
-    Serial.print("TIME: "); Serial.println(date);
-    
-    Serial.println(""); Serial.println("");
-  }
-  else 
-  {
-    Serial.println("Error in WiFi connection");   
-  }
-  
-  // Print the IP address
-  Serial.println(WiFi.localIP());
-
-  server.on("/", handleRootPath);
-  server.on("/free", room_free);
-  server.on("/in_use", room_in_use);
-  server.begin();
-  Serial.println("Server Listening");
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  server.handleClient();
-}
+   if (WiFi.status() == WL_CONNECTED) {
+    http.begin(host);
+    httpCode = http.GET();
+    
+    if (httpCode > 0)
+    {
+      payload = http.getString();
+      found = payload.indexOf("RoomIsBusy");
 
-void handleRootPath(){
-  server.send(200, "text/plain", "Hi");
+      Serial.println("Got response ");
+      
+      if (found == -1)
+      {
+          room_free();
+      }
+      else { 
+          room_in_use();
+      }
+    }
+    else {
+      Serial.println("Something wrong!"); Serial.println(httpCode);
+    }
+    
+    http.end();
+  }
+
+  delay(3000);
 }
 
 void room_free(){
   Serial.println("Room is free");
-  server.send(200, "text/plain", "Room marked as free");
-  
+    
   epd.ClearFrame();
   paint.SetWidth (160);
   paint.Clear(UNCOLORED);
@@ -132,14 +126,12 @@ void room_free(){
 
   paint.DrawFilledRectangle(0, 0, 50, 50, COLORED);
   epd.TransmitPartialBlack(paint.GetImage(), 60, 120, paint.GetWidth(), paint.GetHeight());
-  POSTrequest(0, mac, date);
   
   epd.DisplayFrame();
 }
 
 void room_in_use(){
   Serial.println("Room in use");
-  server.send(200, "text/plain", "Room marked as in use");
   
   epd.ClearFrame();
   paint.SetWidth (160);
@@ -153,7 +145,6 @@ void room_in_use(){
   
   paint.DrawFilledCircle(32, 32, 30, COLORED);
   epd.TransmitPartialRed(paint.GetImage(), 60, 120, paint.GetWidth(), paint.GetHeight());
-  POSTrequest(1, mac, date);
   
   epd.DisplayFrame();
 }
